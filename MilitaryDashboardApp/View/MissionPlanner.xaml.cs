@@ -9,6 +9,7 @@ using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
@@ -35,18 +36,28 @@ namespace MilitaryDashboardApp.View
         private void OnMissionAssigned(object? sender, EventArgs e)
         {
             Toast.Visibility = Visibility.Visible;
-            Toast.Opacity = 1;
+
+            var fadeIn = (Storyboard)FindResource("FadeInStoryboard");
+            fadeIn.Begin();
 
             var timer = new DispatcherTimer
             {
                 Interval = TimeSpan.FromSeconds(2)
             };
+
             timer.Tick += (s, ev) =>
             {
                 timer.Stop();
-                Toast.Visibility = Visibility.Collapsed;
+                var fadeOut = (Storyboard)FindResource("FadeOutStoryboard"); 
+                fadeOut.Completed += (s2, e2) =>
+                {
+                    Toast.Visibility = Visibility.Collapsed;
+                };
+                fadeOut.Begin();
             };
+
             timer.Start();
         }
+
     }
 }

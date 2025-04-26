@@ -120,25 +120,19 @@ namespace MilitaryDashboardApp.View
 
         public void StartMarching()
         {
-            if (!UnitRegistry.Instance.Units.Any(u => u.IsMarching))
-                return;
+            bool anyUnitsMarching = _units.Any(u => u.IsMarching);
 
-            foreach (var unit in _units)
+            if (!anyUnitsMarching)
             {
-                if (double.IsNaN(unit.DestinationLat) || double.IsNaN(unit.DestinationLng))
-                {
-                    MessageBox.Show($"Unit {unit.Name} doesn't have a valid destination!");
-                    continue;
-                }
-
-                unit.IsMarching = true;  // All units are temporarily set to march
+                Debug.WriteLine("No units are marching.");
+                return;
             }
 
             if (_marchingTimer == null)
             {
                 _marchingTimer = new DispatcherTimer
                 {
-                    Interval = TimeSpan.FromMilliseconds(100)
+                    Interval = TimeSpan.FromMilliseconds(100) 
                 };
                 _marchingTimer.Tick += MarchingTimer_Tick;
             }
@@ -146,15 +140,12 @@ namespace MilitaryDashboardApp.View
             if (!_marchingTimer.IsEnabled)
             {
                 _marchingTimer.Start();
-                MessageBox.Show("Marching Timer Started");
+                Debug.WriteLine("Marching timer started.");
             }
         }
 
-
         private void MarchingTimer_Tick(object sender, EventArgs e)
         {
-            Debug.WriteLine("Marching Timer Tick");
-
             bool anyStillMarching = false;
 
             foreach (var unit in _units)
@@ -162,7 +153,10 @@ namespace MilitaryDashboardApp.View
                 if (unit.IsMarching)
                 {
                     MoveUnitTowardsDestination(unit);
-                    anyStillMarching = true;
+                    if (unit.IsMarching) 
+                    {
+                        anyStillMarching = true;
+                    }
                 }
             }
 
@@ -170,53 +164,54 @@ namespace MilitaryDashboardApp.View
 
             if (!anyStillMarching)
             {
-                _marchingTimer.Stop();
+                _marchingTimer?.Stop();
+                Debug.WriteLine("Marching timer stopped - all units arrived.");
             }
         }
 
 
+
         private void MoveUnitTowardsDestination(Unit unit)
         {
-            double scale = 1000; // Scale up for better precision
-
-            double currentLat = unit.Latitude * scale;
-            double currentLng = unit.Longitude * scale;
-            double targetLat = unit.DestinationLat * scale;
-            double targetLng = unit.DestinationLng * scale;
+            double currentLat = unit.Latitude;
+            double currentLng = unit.Longitude;
+            double targetLat = unit.DestinationLat;
+            double targetLng = unit.DestinationLng;
 
             double dLat = targetLat - currentLat;
             double dLng = targetLng - currentLng;
             double distance = Math.Sqrt(dLat * dLat + dLng * dLng);
 
-            double arrivalThreshold = 5; 
-            double stepSize = 500; 
+            double arrivalThreshold = 0.0005;  
+            double stepSize = 0.005;           
 
             if (distance <= arrivalThreshold)
             {
-                unit.Latitude = unit.DestinationLat;
-                unit.Longitude = unit.DestinationLng;
+                unit.Latitude = targetLat;
+                unit.Longitude = targetLng;
                 unit.IsMarching = false;
                 unit.Status = "Arrived";
-                Debug.WriteLine($" {unit.Name} has arrived.");
+                Debug.WriteLine($"{unit.Name} has arrived.");
                 return;
             }
 
-            double moveRatio = Math.Min(stepSize / distance, 1.0);
-            double nextLat = currentLat + dLat * moveRatio;
-            double nextLng = currentLng + dLng * moveRatio;
+            double directionLat = dLat / distance;
+            double directionLng = dLng / distance;
 
-            // Rescale back down to real coordinates
-            double finalLat = nextLat / scale;
-            double finalLng = nextLng / scale;
+            double moveDistance = Math.Min(stepSize, distance);
+            double nextLat = currentLat + directionLat * moveDistance;
+            double nextLng = currentLng + directionLng * moveDistance;
 
             unit.Trail.Add(new PointLatLng(unit.Latitude, unit.Longitude));
-            unit.Latitude = finalLat;
-            unit.Longitude = finalLng;
+            unit.Latitude = nextLat;
+            unit.Longitude = nextLng;
 
-            Debug.WriteLine($" {unit.Name} moved to ({unit.Latitude}, {unit.Longitude})");
+            Debug.WriteLine($"{unit.Name} moved to ({unit.Latitude:F6}, {unit.Longitude:F6})");
+            Debug.WriteLine($"Remaining distance: {distance - moveDistance:F6}");
 
             RefreshMarkers();
         }
+
 
 
 

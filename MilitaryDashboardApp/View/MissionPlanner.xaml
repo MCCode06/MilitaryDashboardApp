@@ -6,6 +6,21 @@
              xmlns:local="clr-namespace:MilitaryDashboardApp.View"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
+
+    <UserControl.Resources>
+        <Storyboard x:Key="FadeInStoryboard">
+            <DoubleAnimation Storyboard.TargetName="Toast"
+                             Storyboard.TargetProperty="Opacity"
+                             From="0" To="1" Duration="0:0:0.3" />
+        </Storyboard>
+
+        <Storyboard x:Key="FadeOutStoryboard">
+            <DoubleAnimation Storyboard.TargetName="Toast"
+                             Storyboard.TargetProperty="Opacity"
+                             From="1" To="0" Duration="0:0:0.3" />
+        </Storyboard>
+    </UserControl.Resources>
+
     <Grid x:Name="RootGrid">
         <GroupBox Header="Mission Planner" Margin="5">
             <StackPanel>
@@ -29,20 +44,18 @@
         </GroupBox>
 
         <Border x:Name="Toast"
-        Background="#AA3333"
-        Padding="10"
-        CornerRadius="6"
-        HorizontalAlignment="Right"
-        VerticalAlignment="Top"
-        Margin="20"
-        Visibility="Collapsed"
-        Opacity="1">
+                Background="#AA3333"
+                Padding="10"
+                CornerRadius="6"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Margin="20"
+                Visibility="Collapsed"
+                Opacity="0"
+                Panel.ZIndex="999">
             <TextBlock Text="Mission Assigned!" 
-               Foreground="White"
-               FontWeight="Bold" />
+                       Foreground="White"
+                       FontWeight="Bold" />
         </Border>
-
     </Grid>
-    
-    
 </UserControl>
